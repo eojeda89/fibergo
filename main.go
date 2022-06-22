@@ -14,5 +14,5 @@ func main() {
 
 	configs.ConnectDB()
 	routes.UserRoute(app)
-	app.Listen(":8443")
+	app.Listen(":443")
 }
