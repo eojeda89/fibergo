@@ -4,6 +4,7 @@ import (
 	"fibergo/configs"
 	"fibergo/routes"
 	"github.com/gofiber/fiber/v2"
+	"log"
 	"os"
 )
 
@@ -16,5 +17,5 @@ func main() {
 
 	configs.ConnectDB()
 	routes.UserRoute(app)
-	app.Listen(":" + port)
+	log.Fatal(app.Listen(":" + port))
 }
