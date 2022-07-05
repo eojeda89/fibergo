@@ -5,6 +5,7 @@ import (
 	"fibergo/configs"
 	"fibergo/models"
 	"fibergo/responses"
+	"fibergo/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 
@@ -18,6 +19,10 @@ var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "user")
 var validate = validator.New()
 
 func CreateUser(c *fiber.Ctx) error {
+	_, err := AuthRequestWithRole(c, []string{"admin", "manager"})
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(utils.NewError(utils.ErrUnauthorized))
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	var user models.User
 	defer cancel()
@@ -57,6 +62,7 @@ func CreateUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(responses.UserResponse{Status: fiber.StatusCreated, Message: "success", Data: &fiber.Map{"data": result}})
 }
+
 func CreateUser2(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	var userPost models.UserPost
@@ -99,14 +105,18 @@ func CreateUser2(c *fiber.Ctx) error {
 }
 
 func GetAUser(c *fiber.Ctx) error {
+	payload, err := AuthRequestWithId(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(utils.NewError(utils.ErrUnauthorized))
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	userId := c.Params("userId")
+	userId := payload.Id
 	var user models.User
 	defer cancel()
 
 	objId, _ := primitive.ObjectIDFromHex(userId)
 
-	err := userCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&user)
+	err = userCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&user)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(responses.UserResponse{Status: fiber.StatusNotFound, Message: "error", Data: &fiber.Map{"data": err.Error()}})
 	}
@@ -200,8 +210,4 @@ func GetAllUsers(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(
 		responses.UserResponse{Status: fiber.StatusOK, Message: "success", Data: &fiber.Map{"data": users}},
 	)
-}
-
-func HelloWorld(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).SendString("Hello, World")
 }
