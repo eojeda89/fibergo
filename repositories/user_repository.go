@@ -30,6 +30,7 @@ func FindOneUser(filter interface{}) (models.User, error) {
 	if err != nil {
 		return user, err
 	}
+	user.Password = ""
 	return user, nil
 }
 
@@ -48,6 +49,7 @@ func FindAllUsers() (interface{}, error) {
 		if err = results.Decode(&singleUser); err != nil {
 			return nil, err
 		}
+		singleUser.Password = ""
 		users = append(users, singleUser)
 	}
 	return users, nil
