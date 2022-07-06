@@ -9,4 +9,5 @@ var (
 	ErrInvalidAuthToken   = errors.New("invalid auth token")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrUnauthorized       = errors.New("unauthorized")
+	ErrUserNotFound       = errors.New("user with specified ID not found")
 )

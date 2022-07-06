@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"context"
 	"fibergo/models"
+	"fibergo/repositories"
 	"fibergo/responses"
 	"fibergo/security"
 	"fibergo/utils"
@@ -17,28 +17,36 @@ import (
 	"time"
 )
 
-//var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "user")
-
 func SingUp(c *fiber.Ctx) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	var newUser models.User
 	var userFound models.User
-	defer cancel()
 	err := c.BodyParser(&newUser)
 	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(utils.NewError(err))
 	}
 	if !govalidator.IsEmail(utils.NormalizeEmail(newUser.Email)) {
-		return c.Status(fiber.StatusBadRequest).JSON(utils.NewError(utils.ErrInvalidEmail))
+		return c.Status(fiber.StatusBadRequest).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusBadRequest,
+				Message: "error",
+				Data:    utils.NewError(utils.ErrInvalidEmail)})
 	}
-	err = userCollection.FindOne(ctx, bson.M{"email": newUser.Email}).Decode(&userFound)
+	userFound, err = repositories.FindOneUser(bson.M{"email": newUser.Email})
 	if err != nil {
 		if strings.TrimSpace(newUser.Password) == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(utils.NewError(utils.ErrEmptyPassword))
+			return c.Status(fiber.StatusBadRequest).
+				JSON(responses.UserResponse{
+					Status:  fiber.StatusBadRequest,
+					Message: "error",
+					Data:    utils.NewError(utils.ErrEmptyPassword)})
 		}
 		newUser.Password, err = security.EncryptPassword(newUser.Password)
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(utils.NewError(err))
+			return c.Status(fiber.StatusBadRequest).
+				JSON(responses.UserResponse{
+					Status:  fiber.StatusBadRequest,
+					Message: "error",
+					Data:    utils.NewError(err)})
 		}
 		newUser.CreatedAt = primitive.Timestamp{
 			T: uint32(time.Now().Unix()),
@@ -62,53 +70,92 @@ func SingUp(c *fiber.Ctx) error {
 			UpdatedAt: newUser.UpdatedAt,
 			Profile:   newProfile,
 		}
-		result, err := userCollection.InsertOne(ctx, newUser)
+		result, err := repositories.InsertOneUser(newUser)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(responses.UserResponse{Status: fiber.StatusInternalServerError, Message: "error", Data: &fiber.Map{"data": err.Error()}})
+			return c.Status(fiber.StatusInternalServerError).
+				JSON(responses.UserResponse{
+					Status:  fiber.StatusInternalServerError,
+					Message: "error",
+					Data:    utils.NewError(err)})
 		}
-		return c.Status(fiber.StatusCreated).JSON(responses.UserResponse{Status: fiber.StatusCreated, Message: "success", Data: &fiber.Map{"data": result}})
+		return c.Status(fiber.StatusCreated).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusCreated,
+				Message: "success",
+				Data:    result})
 	}
 	if userFound.Email == newUser.Email {
 		err = utils.ErrEmailAlreadyExists
 	}
-	return c.Status(fiber.StatusBadRequest).JSON(utils.NewError(err))
+	return c.Status(fiber.StatusBadRequest).
+		JSON(responses.UserResponse{
+			Status:  fiber.StatusBadRequest,
+			Message: "error",
+			Data:    utils.NewError(err)})
 }
 
 func SingIn(c *fiber.Ctx) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	var input models.UserLogin
 	var user models.User
-	defer cancel()
 	err := c.BodyParser(&input)
 	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(utils.NewError(err))
+		return c.Status(fiber.StatusUnprocessableEntity).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusUnprocessableEntity,
+				Message: "error",
+				Data:    utils.NewError(err)})
 	}
 	log.Println("Input email: ", input.Email, "-Input password: ", input.Password)
 	if !govalidator.IsEmail(utils.NormalizeEmail(input.Email)) {
-		return c.Status(fiber.StatusBadRequest).JSON(utils.NewError(utils.ErrInvalidEmail))
+		return c.Status(fiber.StatusBadRequest).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusBadRequest,
+				Message: "error",
+				Data:    utils.NewError(utils.ErrInvalidEmail)})
 	}
-	err = userCollection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&user)
+	user, err = repositories.FindOneUser(bson.M{"email": input.Email})
 	if err != nil {
 		log.Printf("%s signin failed: %v\n", input.Email, err.Error())
-		return c.Status(fiber.StatusUnauthorized).JSON(utils.NewError(utils.ErrInvalidCredentials))
+		return c.Status(fiber.StatusUnauthorized).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusUnauthorized,
+				Message: "error",
+				Data:    utils.NewError(utils.ErrInvalidCredentials)})
 	}
 	if strings.TrimSpace(input.Password) == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(utils.NewError(utils.ErrEmptyPassword))
+		return c.Status(fiber.StatusBadRequest).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusBadRequest,
+				Message: "error",
+				Data:    utils.NewError(utils.ErrEmptyPassword)})
 	}
 	err = security.VerifyPassword(user.Password, input.Password)
 	if err != nil {
 		log.Printf("%s signin failed: %v\n", input.Email, err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(utils.NewError(err))
+		return c.Status(fiber.StatusBadRequest).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusBadRequest,
+				Message: "error",
+				Data:    utils.NewError(err)})
 	}
 	token, err := security.NewToken(user.Id.Hex())
 	if err != nil {
 		log.Printf("%s signin failed: %v\n", input.Email, err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(utils.NewError(err))
+		return c.Status(fiber.StatusBadRequest).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusBadRequest,
+				Message: "error",
+				Data:    utils.NewError(err)})
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"user":  user,
-		"token": fmt.Sprintf("Bearer %s", token),
-	})
+	return c.Status(fiber.StatusOK).
+		JSON(responses.UserResponse{
+			Status:  fiber.StatusOK,
+			Message: "success",
+			Data: responses.SigninResponse{
+				User:  user,
+				Token: fmt.Sprintf("Bearer %s", token),
+			},
+		})
 }
 
 func AuthRequestWithId(c *fiber.Ctx) (*jwt.StandardClaims, error) {
@@ -127,10 +174,8 @@ func AuthRequestWithId(c *fiber.Ctx) (*jwt.StandardClaims, error) {
 }
 
 func AuthRequestWithRole(c *fiber.Ctx, roles []string) (*jwt.StandardClaims, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	token := c.Locals("user").(*jwt.Token)
 	var user models.User
-	defer cancel()
 	payload, err := security.ParseToken(token.Raw)
 	log.Println("token id: ", payload.Id, " - token issuer: ", payload.Issuer)
 	//log.Println("el id es: ", id)
@@ -138,7 +183,7 @@ func AuthRequestWithRole(c *fiber.Ctx, roles []string) (*jwt.StandardClaims, err
 		return nil, err
 	}
 	objId, _ := primitive.ObjectIDFromHex(payload.Id)
-	err = userCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&user)
+	user, err = repositories.FindOneUser(bson.M{"id": objId})
 	log.Println("id del usuario: ", user.Id)
 	log.Println("Profile del usuario: ", user.Profile)
 	log.Println("Roles del usuario: ", user.Roles)

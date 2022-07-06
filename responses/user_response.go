@@ -1,9 +1,16 @@
 package responses
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"fibergo/models"
+)
 
 type UserResponse struct {
-	Status  int        `json:"status"`
-	Message string     `json:"message"`
-	Data    *fiber.Map `json:"data"`
+	Status  int         `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+type SigninResponse struct {
+	User  models.User `json:"user"`
+	Token string      `json:"token"`
 }
