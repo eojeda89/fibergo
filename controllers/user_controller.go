@@ -16,6 +16,12 @@ import (
 
 var validate = validator.New()
 
+//@description This is a description
+//@id Create a user
+//@accept json
+//@produce json
+//@router /users [get]
+
 func CreateUser(c *fiber.Ctx) error {
 	_, err := AuthRequestWithRole(c, []string{"admin", "manager"})
 	if err != nil {
@@ -172,6 +178,14 @@ func CreateUser2(c *fiber.Ctx) error {
 			Data:    result})
 }
 
+// Get a user godoc
+//@Summary Show the status of server.
+//@Description get the status of server.
+//@Tags root
+//@Accept */*
+//@Produce json
+//@Success 200 {object} map[string]interface{}
+//@Router /users/id [get]
 func GetAUser(c *fiber.Ctx) error {
 	payload, err := AuthRequestWithId(c)
 	if err != nil {
@@ -305,6 +319,13 @@ func DeleteAUser(c *fiber.Ctx) error {
 		)
 }
 
+// Get all users godoc
+//@Summary Show the status of server.
+//@Description Get the status of server.
+//@Tags root
+//@Produce json
+//@Success 200 {object} map[string]interface{}
+//@Router /users [get]
 func GetAllUsers(c *fiber.Ctx) error {
 	users, err := repositories.FindAllUsers()
 	if err != nil {
