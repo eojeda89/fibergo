@@ -17,6 +17,16 @@ import (
 	"time"
 )
 
+// Register an user godoc
+//@Summary Register an user.
+//@Description Register an user .
+//@Param user body models.User true "The user object to be registered"
+//@Accept json
+//@Produce json
+//@Success 201 {object} responses.UserResponse{data=string}
+//@Failure 400 {object} responses.UserResponse{data=utils.JError}
+//@Failure 500 {object} responses.UserResponse{data=utils.JError}
+//@Router /signup [post]
 func SingUp(c *fiber.Ctx) error {
 	var newUser models.User
 	var userFound models.User
@@ -94,6 +104,18 @@ func SingUp(c *fiber.Ctx) error {
 			Data:    utils.NewError(err)})
 }
 
+// Singnin godoc
+//@Summary Signin.
+//@Description Signin an user .
+//@Param input body models.UserLogin true "The signin object"
+//@Accept json
+//@Produce json
+//@Success 200 {object} responses.UserResponse{data=responses.SigninResponse}
+//@Failure 400 {object} responses.UserResponse{data=utils.JError}
+//@Failure 401 {object} responses.UserResponse{data=utils.JError}
+//@Failure 422 {object} responses.UserResponse{data=utils.JError}
+//@Failure 500 {object} responses.UserResponse{data=utils.JError}
+//@Router /signin [post]
 func SingIn(c *fiber.Ctx) error {
 	var input models.UserLogin
 	var user models.User

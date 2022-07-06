@@ -4,6 +4,8 @@ import (
 	"strings"
 )
 
+// Error model info
+// @Description Error model response information
 type JError struct {
 	Error string `json:"error"`
 }

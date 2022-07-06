@@ -16,12 +16,17 @@ import (
 
 var validate = validator.New()
 
-//@description This is a description
-//@id Create a user
-//@accept json
-//@produce json
-//@router /users [get]
-
+// Create an user godoc
+//@Summary Create an user.
+//@Description Create an user .
+//@Param user body models.User true "The user object to be created"
+//@Accept json
+//@Produce json
+//@Success 201 {object} responses.UserResponse{data=string}
+//@Failure 400 {object} responses.UserResponse{data=utils.JError}
+//@Failure 401 {object} responses.UserResponse{data=utils.JError}
+//@Failure 500 {object} responses.UserResponse{data=utils.JError}
+//@Router /users [post]
 func CreateUser(c *fiber.Ctx) error {
 	_, err := AuthRequestWithRole(c, []string{"admin", "manager"})
 	if err != nil {
@@ -178,14 +183,15 @@ func CreateUser2(c *fiber.Ctx) error {
 			Data:    result})
 }
 
-// Get a user godoc
-//@Summary Show the status of server.
-//@Description get the status of server.
-//@Tags root
-//@Accept */*
+// Get an user godoc
+//@Summary Show an user.
+//@Description Get an user by it´s ID.
+//@Param id path string true "The user ID to be showed"
 //@Produce json
-//@Success 200 {object} map[string]interface{}
-//@Router /users/id [get]
+//@Success 200 {object} responses.UserResponse{data=models.User}
+//@Failure 401 {object} responses.UserResponse{data=utils.JError}
+//@Failure 404 {object} responses.UserResponse{data=utils.JError}
+//@Router /users/{id} [get]
 func GetAUser(c *fiber.Ctx) error {
 	payload, err := AuthRequestWithId(c)
 	if err != nil {
@@ -214,6 +220,17 @@ func GetAUser(c *fiber.Ctx) error {
 			Data:    user})
 }
 
+// Edit an user godoc
+//@Summary Edit an user.
+//@Description Edit an user by it´s ID.
+//@Param id path string true "The user ID to be edited"
+//@Param input body models.User true "The user object with the new values"
+//@Produce json
+//@Success 200 {object} responses.UserResponse{data=models.User}
+//@Failure 400 {object} responses.UserResponse{data=utils.JError}
+//@Failure 401 {object} responses.UserResponse{data=utils.JError}
+//@Failure 500 {object} responses.UserResponse{data=utils.JError}
+//@Router /users/{id} [put]
 func EditAUser(c *fiber.Ctx) error {
 	_, err := AuthRequestWithRole(c, []string{"admin", "manager"})
 	if err != nil {
@@ -285,6 +302,16 @@ func EditAUser(c *fiber.Ctx) error {
 			Data:    updatedUser})
 }
 
+// Delete an user godoc
+//@Summary Delete an user.
+//@Description Delete an user by it´s ID.
+//@Param id path string true "The user ID to be deleted"
+//@Produce json
+//@Success 200 {object} responses.UserResponse{data=string}
+//@Failure 401 {object} responses.UserResponse{data=utils.JError}
+//@Failure 404 {object} responses.UserResponse{data=utils.JError}
+//@Failure 500 {object} responses.UserResponse{data=utils.JError}
+//@Router /users/{id} [delete]
 func DeleteAUser(c *fiber.Ctx) error {
 	_, err := AuthRequestWithRole(c, []string{"admin", "manager"})
 	if err != nil {
@@ -320,11 +347,11 @@ func DeleteAUser(c *fiber.Ctx) error {
 }
 
 // Get all users godoc
-//@Summary Show the status of server.
-//@Description Get the status of server.
-//@Tags root
+//@Summary Show a list of all users.
+//@Description Get a list of all users.
 //@Produce json
-//@Success 200 {object} map[string]interface{}
+//@Success 200 {object} responses.UserResponse{data=[]models.User}
+//@Failure 500 {object} responses.UserResponse{data=utils.JError}
 //@Router /users [get]
 func GetAllUsers(c *fiber.Ctx) error {
 	users, err := repositories.FindAllUsers()

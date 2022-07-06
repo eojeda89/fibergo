@@ -2,8 +2,8 @@ package main
 
 import (
 	"fibergo/configs"
+	_ "fibergo/docs"
 	"fibergo/routes"
-	_ "github.com/eojeda89/fibergo/docs"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/swagger"
@@ -11,9 +11,9 @@ import (
 	"os"
 )
 
-// @title Fiber Example API
+// @title Fiber User Microservice API
 // @version 1.0
-// @description This is a sample swagger for Fiber
+// @description This is a microservice for the user´s management
 // @termsOfService http://swagger.io/terms/
 // @contact.name API Support
 // @contact.email fiber@swagger.io
