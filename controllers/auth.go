@@ -70,7 +70,7 @@ func SingUp(c *fiber.Ctx) error {
 			UpdatedAt: newUser.UpdatedAt,
 			Profile:   newProfile,
 		}
-		result, err := repositories.InsertOneUser(newUser)
+		_, err := repositories.InsertOneUser(newUser)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).
 				JSON(responses.UserResponse{
@@ -82,7 +82,7 @@ func SingUp(c *fiber.Ctx) error {
 			JSON(responses.UserResponse{
 				Status:  fiber.StatusCreated,
 				Message: "success",
-				Data:    result})
+				Data:    &fiber.Map{"id": newUser.Id}})
 	}
 	if userFound.Email == newUser.Email {
 		err = utils.ErrEmailAlreadyExists
@@ -105,7 +105,6 @@ func SingIn(c *fiber.Ctx) error {
 				Message: "error",
 				Data:    utils.NewError(err)})
 	}
-	log.Println("Input email: ", input.Email, "-Input password: ", input.Password)
 	if !govalidator.IsEmail(utils.NormalizeEmail(input.Email)) {
 		return c.Status(fiber.StatusBadRequest).
 			JSON(responses.UserResponse{
@@ -162,8 +161,6 @@ func AuthRequestWithId(c *fiber.Ctx) (*jwt.StandardClaims, error) {
 	id := c.Params("userId")
 	token := c.Locals("user").(*jwt.Token)
 	payload, err := security.ParseToken(token.Raw)
-	log.Println("token id: ", payload.Id, " - token issuer: ", payload.Issuer)
-	log.Println("el id es: ", id)
 	if err != nil {
 		return nil, err
 	}
@@ -177,18 +174,12 @@ func AuthRequestWithRole(c *fiber.Ctx, roles []string) (*jwt.StandardClaims, err
 	token := c.Locals("user").(*jwt.Token)
 	var user models.User
 	payload, err := security.ParseToken(token.Raw)
-	log.Println("token id: ", payload.Id, " - token issuer: ", payload.Issuer)
-	//log.Println("el id es: ", id)
 	if err != nil {
 		return nil, err
 	}
 	objId, _ := primitive.ObjectIDFromHex(payload.Id)
 	user, err = repositories.FindOneUser(bson.M{"id": objId})
-	log.Println("id del usuario: ", user.Id)
-	log.Println("Profile del usuario: ", user.Profile)
-	log.Println("Roles del usuario: ", user.Roles)
 	if err != nil {
-		log.Println("Hubo un error al encontrar el usuario")
 		return nil, err
 	}
 	if !utils.ArrayContainsAny(user.Roles, roles) {

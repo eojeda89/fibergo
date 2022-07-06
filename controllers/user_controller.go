@@ -93,7 +93,7 @@ func CreateUser(c *fiber.Ctx) error {
 		Profile:   newProfile,
 	}
 
-	result, err := repositories.InsertOneUser(newUser)
+	_, err = repositories.InsertOneUser(newUser)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).
 			JSON(responses.UserResponse{
@@ -106,10 +106,18 @@ func CreateUser(c *fiber.Ctx) error {
 		JSON(responses.UserResponse{
 			Status:  fiber.StatusCreated,
 			Message: "success",
-			Data:    &fiber.Map{"id": result.InsertedID}})
+			Data:    &fiber.Map{"id": newUser.Id}})
 }
 
 func CreateUser2(c *fiber.Ctx) error {
+	_, err := AuthRequestWithRole(c, []string{"admin", "manager"})
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusUnauthorized,
+				Message: "error",
+				Data:    utils.NewError(utils.ErrUnauthorized)})
+	}
 	var userPost models.UserPost
 
 	//validate the request body
@@ -176,7 +184,7 @@ func GetAUser(c *fiber.Ctx) error {
 	userId := payload.Id
 	objId, _ := primitive.ObjectIDFromHex(userId)
 
-	user, err := repositories.FindOneUser(bson.M{"_id": objId})
+	user, err := repositories.FindOneUser(bson.M{"id": objId})
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).
 			JSON(responses.UserResponse{
@@ -193,6 +201,14 @@ func GetAUser(c *fiber.Ctx) error {
 }
 
 func EditAUser(c *fiber.Ctx) error {
+	_, err := AuthRequestWithRole(c, []string{"admin", "manager"})
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusUnauthorized,
+				Message: "error",
+				Data:    utils.NewError(utils.ErrUnauthorized)})
+	}
 	userId := c.Params("userId")
 	var user models.User
 
@@ -256,6 +272,14 @@ func EditAUser(c *fiber.Ctx) error {
 }
 
 func DeleteAUser(c *fiber.Ctx) error {
+	_, err := AuthRequestWithRole(c, []string{"admin", "manager"})
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).
+			JSON(responses.UserResponse{
+				Status:  fiber.StatusUnauthorized,
+				Message: "error",
+				Data:    utils.NewError(utils.ErrUnauthorized)})
+	}
 	userId := c.Params("userId")
 	result, err := repositories.DeleteUserById(userId)
 	if err != nil {

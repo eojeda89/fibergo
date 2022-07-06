@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fibergo/responses"
 	"fibergo/security"
 	"fibergo/utils"
 	"github.com/gofiber/fiber/v2"
@@ -13,7 +14,11 @@ func Authenticate(c *fiber.Ctx) error {
 		SigningMethod: security.SigningMethod,
 		TokenLookup:   "header:x-access-token",
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
-			return ctx.Status(fiber.StatusUnauthorized).JSON(utils.NewError(err))
+			return ctx.Status(fiber.StatusUnauthorized).
+				JSON(responses.UserResponse{
+					Status:  fiber.StatusUnauthorized,
+					Message: "error",
+					Data:    utils.NewError(err)})
 		},
 	})(c)
 }

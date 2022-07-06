@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"strings"
 )
 
@@ -21,7 +20,6 @@ func NewError(err error) JError {
 
 func NormalizeEmail(email string) string {
 	normalizedEmail := strings.TrimSpace(strings.ToLower(email))
-	log.Println("this is the email: ", normalizedEmail)
 	return normalizedEmail
 }
 

@@ -7,11 +7,11 @@ import (
 
 func UserRoute(app *fiber.App) {
 	app.Post("/users", Authenticate, controllers.CreateUser)
-	app.Post("/users/flat", controllers.CreateUser2)
+	app.Post("/users/flat", Authenticate, controllers.CreateUser2)
 	app.Get("/users/:userId", Authenticate, controllers.GetAUser)
 	app.Get("/users", controllers.GetAllUsers)
-	app.Put("/users/:userId", controllers.EditAUser)
-	app.Delete("/users/:userId", controllers.DeleteAUser)
+	app.Put("/users/:userId", Authenticate, controllers.EditAUser)
+	app.Delete("/users/:userId", Authenticate, controllers.DeleteAUser)
 	app.Post("/signup", controllers.SingUp)
 	app.Post("/signin", controllers.SingIn)
 }
